@@ -1,4 +1,4 @@
-//import "jspsych/css/jspsych.css";
+import "jspsych/css/jspsych.css";
 import "./style.css";
 import jsPsych from "./prepare"
 import jsPsychPipe from '@jspsych-contrib/plugin-pipe';
