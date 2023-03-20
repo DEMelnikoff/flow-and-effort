@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-    base: "/jspsych-typing/",
+    base: "/flow-and-effort/",
     build: {
       target: "esnext",
       sourcemap: true
