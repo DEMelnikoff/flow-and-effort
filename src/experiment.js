@@ -1,10 +1,10 @@
-/* import "jspsych/css/jspsych.css";
+import "jspsych/css/jspsych.css";
 import "./style.css";
 import jsPsych from "./prepare"
 import jsPsychPipe from '@jspsych-contrib/plugin-pipe';
 import { readYaml, checkEmpty, fullScreenHandler} from "./utils";
 import {practicePhase, renderPlugin, bonusInstruction, bonusPhase, DICT} from "./jspsych-typing";
-*/
+
 
 
 // read configurations
