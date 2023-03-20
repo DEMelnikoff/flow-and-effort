@@ -16,7 +16,7 @@ show_practice_result: &pts false
 # ========= bonus settings ======================================================
 bonus_trial_rounds: &btr 10
 bonus_trial_time: &btt 20
-feedback_duration: &fbd 4
+feedback_duration: &fbd 2
 target_number_dist: &btd 
   choice: uniform
   normal: {std: 20}
@@ -50,14 +50,14 @@ practice:
 
 bonus_feedback_success: &bfs >
   <div style="font-size:30px; padding-bottom: 30px"> 
-    <p>You reached the target score!</p>
+    <p>Congratulations, you reach the target = <span id="target-number"></span></p>
     <p id="bonus-number"></p>
   </div>
   <p>Get ready for the next round!</p>
 
 bonus_feedback_failure: &bff >
   <div style="font-size:30px; padding-bottom: 30px"> 
-    <p>You missed the target score!</p>
+    <p>Sorry, you miss the target = <span id="target-number"></span></p>
     <p id="bonus-number"></p>
   </div>
   <p>Get ready for the next round!</p>
@@ -196,10 +196,10 @@ bonus_survey_question3: &q3
     - $0.30
 
 bonus_survey_success: &success >
-  <p>Congratulations, you are ready to start earning bonus money!</p>
+  <p>Congratulations, you are ready to start earning bonus</p>
 
 bonus_suvey_failure: &failure >
-  <p>Oops, you answered at least one question incorrectly.</p>
+  <p>Oops, you have missed question(s) on the comprehension check</p>
   <p>To make sure you understand the game, please continue to re-read the instructions.</p>
 
 bonus_instruction:
