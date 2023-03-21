@@ -16,7 +16,7 @@ show_practice_result: &pts false
 # ========= bonus settings ======================================================
 bonus_trial_rounds: &btr 10
 bonus_trial_time: &btt 20
-feedback_duration: &fbd 2
+feedback_duration: &fbd 4
 target_number_dist: &btd 
   choice: uniform
   normal: {std: 20}
