@@ -50,14 +50,14 @@ practice:
 
 bonus_feedback_success: &bfs >
   <div style="font-size:30px; padding-bottom: 30px"> 
-    <p>Congratulations, you reach the target = <span id="target-number"></span></p>
+    <p>You reached the target value!</span></p>
     <p id="bonus-number"></p>
   </div>
   <p>Get ready for the next round!</p>
 
 bonus_feedback_failure: &bff >
   <div style="font-size:30px; padding-bottom: 30px"> 
-    <p>Sorry, you miss the target = <span id="target-number"></span></p>
+    <p>You missed the target value!</span></p>
     <p id="bonus-number"></p>
   </div>
   <p>Get ready for the next round!</p>
