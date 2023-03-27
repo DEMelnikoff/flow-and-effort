@@ -1,8 +1,8 @@
-var jsPsychBalloonGame = (function (jspsych) {
+var jsPsychRaceGame = (function (jspsych) {
   'use strict';
 
   const info = {
-      name: "balloon-game",
+      name: "race-game",
       parameters: {
           /**
            * The HTML string to be displayed.
@@ -67,24 +67,33 @@ var jsPsychBalloonGame = (function (jspsych) {
    * @author Josh de Leeuw
    * @see {@link https://www.jspsych.org/plugins/jspsych-html-keyboard-response/ html-keyboard-response plugin documentation on jspsych.org}
    */
-  class BalloonGamePlugin {
+  class RaceGamePlugin {
       constructor(jsPsych) {
           this.jsPsych = jsPsych;
       }
       trial(display_element, trial) {
           var new_html = 
-          '<div style="position:absolute; top:22%; left:50%; margin-top:-2vh; margin-left:-50vh; font-size:3vh; z-index:9">' +
-            '<p style="height:4vh; width:100vh; display:block; margin-left:auto; margin-right:auto">Pop the balloon to get the prize inside!</p>' +
-          '</div>' +
-          '<div style="display:flex; position:justify-content">' +
-            '<img id="'+trial.image+'" src="'+trial.imagePath+'" style="height:'+trial.initHeight+'vh; width:'+trial.initWidth+'vh"></img>' +
-          '</div>' + 
-          '<div style="position:absolute; top:72%; left:40%; margin-top:-3vh; margin-left:-3vh; font-size:3vh; z-index:9">' +
-            '<p id="left-button" style="height:6vh; width:6vh; background:#ffa590; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">E</p>' +
-          '</div>' + 
-          '<div style="position:absolute; top:72%; left:60%; margin-top:-3vh; margin-left:-3vh; font-size:3vh; z-index:9">' +
-            '<p id="right-button" style="height:6vh; width:6vh; background:#a3a6a7; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">I</p>' +
-          '</div>'
+          `<div style="position:absolute; top:22%; left:50%; margin-top:-2vh; margin-left:-50vh; font-size:3vh; z-index:9">
+            <p style="height:4vh; width:100vh; display:block; margin-left:auto; margin-right:auto">Reach the finish line first to win a bonus!</p>
+          </div>
+
+          <div id="${trial.image}" style="position:absolute; top:40%; left:${trial.initPos}%">
+            <img src="${trial.imagePath}" style="height:${trial.height}vh; width:${trial.width}vw"></img>
+          </div>
+
+          <div id="opponent" style="position:absolute; top:50%; left:${trial.initPos}%">
+            <img src="img/theirCar.png" style="height:${trial.height}vh; width:${trial.width}vw"></img>
+          </div>
+
+          <div style="position:absolute; top:35%; left:${100-trial.initPos}%; height:25vh; width:5px; background:black">
+          </div>
+
+          <div style="position:absolute; top:72%; left:40%; margin-top:-3vh; margin-left:-3vh; font-size:3vh; z-index:9">
+            <p id="left-button" style="height:6vh; width:6vh; background:#ffa590; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">E</p>
+          </div>
+          <div style="position:absolute; top:72%; left:60%; margin-top:-3vh; margin-left:-3vh; font-size:3vh; z-index:9">
+            <p id="right-button" style="height:6vh; width:6vh; background:#a3a6a7; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">I</p>
+          </div>`
 
           // add prompt
           if (trial.prompt !== null) {
@@ -94,45 +103,78 @@ var jsPsychBalloonGame = (function (jspsych) {
           // draw
           display_element.innerHTML = new_html;
 
-          let idx = 0;
-          let score = 0;
-          let height = trial.initHeight;
-          let width = trial.initWidth;
-          let img = document.getElementById(trial.image);
+          let pressRight = 0;
+          let nPresses = 0;
+          let nPresses_last = nPresses;
+          let nPresses_tot = 0;
+          let myPos = trial.initPos;
+          let theirPos = trial.initPos;
+          let myCar = document.getElementById(trial.image);
+          let theirCar = document.getElementById("opponent");
           let leftButton = document.getElementById("left-button");
           let rightButton = document.getElementById("right-button");
+          let tic = 0;
+          let time = 0;
+          let rate = 0;
+          let win;
 
-          // function for expanding balloon
-          const balloon_func = function(event) {
+          // function for moving own car
+          const moveMe_func = function(event) {
+            (nPresses_tot == 0) ? tic = Date.now() : time = Date.now() - tic;
             let key = event.key;
-            if (key == trial.keys[0] && idx == 0) {
-                height = height * 1.01;
-                width = width * 1.01;
-                img.style.height = height + "vh";
-                img.style.width = width + "vh";
+            if (key == trial.keys[0] && pressRight == 0) {
+                myPos = myPos + trial.speed;
+                myCar.style.left = myPos + "%";
                 leftButton.style.background = "#a3a6a7";
                 rightButton.style.background = "#ffa590";
-                idx = 1;
-                score++;
-            } else if (key == trial.keys[1] && idx == 1) {
-                height = height * 1.01;
-                width = width * 1.01;
-                img.style.height = height + "vh";
-                img.style.width = width + "vh";
+                pressRight = 1;
+                nPresses++;
+                nPresses_tot++;
+            } else if (key == trial.keys[1] && pressRight == 1) {
+                myPos = myPos + trial.speed;
+                myCar.style.left = myPos + "%";
                 leftButton.style.background = "#ffa590";
                 rightButton.style.background = "#a3a6a7";
-                idx = 0;
-                score++;
+                pressRight = 0;
+                nPresses++;
+                nPresses_tot++;
             }
-            img = document.getElementById(trial.image);
+            myCar = document.getElementById(trial.image);
+            if (theirPos + trial.width > 100 - trial.initPos || myPos + trial.width > 100 - trial.initPos) {
+              myPos >= theirPos ? win = 1 : win = 0;
+              end_trial();
+            }
+            rate = (nPresses_tot / time) * 1000;
           };
 
           // wrapper for balloon function
-          const balloon_wrap = function(trial) {
-             return balloon_func
+          const moveMe_wrap = function(trial) {
+             return moveMe_func
           };
           
-          document.addEventListener("keydown", balloon_wrap(trial));
+          // listen for keypress
+          document.addEventListener("keydown", moveMe_wrap(trial));
+
+          // function for moving opponent's car
+          const moveThem_func = function() {
+            let pAccel = logit(rate, .5, 12.5, trial.intercept);
+            let accel = (Math.random() > pAccel) ? 1 : 0;
+            let perturb = 0;
+            if (Math.random() > .8) {
+              perturb = (accel - .5) * .6;
+              console.log(rate, pAccel)
+            };
+            if (nPresses == 0) {
+              theirPos = theirPos + (trial.speed * nPresses_last + perturb);
+            } else {
+              theirPos = theirPos + (trial.speed * nPresses + perturb);
+              nPresses_last = nPresses;
+            };
+            theirCar.style.left = theirPos + "%";
+            nPresses = 0;
+          }
+
+          const move_opp = setInterval(moveThem_func, 500);
 
           // store response
           var response = {
@@ -142,7 +184,8 @@ var jsPsychBalloonGame = (function (jspsych) {
           // function to end trial when it is time
           const end_trial = () => {
               // kill any remaining setTimeout handlers
-              document.removeEventListener("keydown", balloon_wrap(trial));
+              document.removeEventListener("keydown", moveMe_wrap(trial));
+              clearInterval(move_opp);
               this.jsPsych.pluginAPI.clearAllTimeouts();
               // kill keyboard listeners
               if (typeof keyboardListener !== "undefined") {
@@ -151,11 +194,12 @@ var jsPsychBalloonGame = (function (jspsych) {
               // gather the data to store for the trial
               var trial_data = {
                   rt: response.rt,
-                  stimulus: trial.stimulus,
-                  response: response.key,
-                  score: score,
-                  height: height,
-                  width: width,
+                  playTime: time,
+                  nPresses: nPresses_tot,
+                  rate: rate,
+                  myPos: myPos,
+                  theirPos: theirPos,
+                  outcome: win,
               };
               // clear the display
               display_element.innerHTML = "";
@@ -230,8 +274,8 @@ var jsPsychBalloonGame = (function (jspsych) {
           }
       }
   }
-  BalloonGamePlugin.info = info;
+  RaceGamePlugin.info = info;
 
-  return BalloonGamePlugin;
+  return RaceGamePlugin;
 
 })(jsPsychModule);
