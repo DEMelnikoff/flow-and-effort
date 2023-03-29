@@ -5,57 +5,76 @@ var jsPsychRaceGame = (function (jspsych) {
       name: "race-game",
       parameters: {
           /**
-           * The HTML string to be displayed.
+           * Array containing the key(s) the subject must press to accelerate the car.
            */
-          image: {
-              type: jspsych.ParameterType.HTML_STRING,
-              pretty_name: "Image",
-              default: undefined,
-          },
-          /**
-           * Array containing the key(s) the subject is allowed to press to respond to the stimulus.
-           */
-          choices: {
-              type: jspsych.ParameterType.KEYS,
-              pretty_name: "Choices",
-              default: "ALL_KEYS",
-          },
           keys: {
               type: jspsych.ParameterType.KEYS,
               pretty_name: "Keys",
               default: "ALL_KEYS",
           },
           /**
-           * Any content here will be displayed below the stimulus.
+           * Speed of car.
+           */
+          speed: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Speed",
+              default: null,
+          },
+          /**
+           * Maximum speed of car.
+           */
+          maxSpeed: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Max Speed",
+              default: null,
+          },
+          /**
+           * Array containing the key(s) the subject must press to accelerate the car.
+           */
+          carSize: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Car Size",
+              default: null,
+          },
+          /**
+           * Starting position of car (distance from left edge of track) in pixels.
+           */
+          initPos: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Initial Position",
+              default: null,
+          },
+          /**
+           * Width of track in pixels.
+           */
+          trackWidth: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Track Width",
+              default: null,
+          },
+          /**
+           * This value is subtracted from the output of the logistic function to compute the probability of the opponent accelerating.
+           */
+          shift: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Shift",
+              default: null,
+          },
+          /**
+           * This value is used to rescale the player's rate of button pressing as an input to the logistic function.
+           */
+          scale: {
+              type: jspsych.ParameterType.INT,
+              pretty_name: "Scale",
+              default: null,
+          },
+          /**
+           * Any content here will be displayed above the stimulus.
            */
           prompt: {
               type: jspsych.ParameterType.HTML_STRING,
               pretty_name: "Prompt",
               default: null,
-          },
-          /**
-           * How long to show the stimulus.
-           */
-          stimulus_duration: {
-              type: jspsych.ParameterType.INT,
-              pretty_name: "Stimulus duration",
-              default: null,
-          },
-          /**
-           * How long to show trial before it ends.
-           */
-          trial_duration: {
-              type: jspsych.ParameterType.INT,
-              pretty_name: "Trial duration",
-              default: null,
-          },
-          /**
-           * If true, trial will end when subject makes a response.
-           */
-          response_ends_trial: {
-              type: jspsych.ParameterType.BOOL,
-              pretty_name: "Response ends trial",
-              default: true,
           },
       },
   };
@@ -72,79 +91,98 @@ var jsPsychRaceGame = (function (jspsych) {
           this.jsPsych = jsPsych;
       }
       trial(display_element, trial) {
+
           var new_html = 
-          `<div style="position:absolute; top:22%; left:50%; margin-top:-2vh; margin-left:-50vh; font-size:3vh; z-index:9">
-            <p style="height:4vh; width:100vh; display:block; margin-left:auto; margin-right:auto">Reach the finish line first to win a bonus!</p>
+          `<div style="position:relative; left: 0; right: 0; width: ${trial.trackWidth}px; height: 100px; margin:auto">
+              <p style="font-size:25px">${trial.prompt}</p>
           </div>
 
-          <div id="${trial.image}" style="position:absolute; top:40%; left:${trial.initPos}%">
-            <img src="${trial.imagePath}" style="height:${trial.height}vh; width:${trial.width}vw"></img>
+          <div style="position:relative; left: 0; right: 0; width: ${trial.trackWidth}px; height: 250px; margin:auto">
+            <div id="myCar" style="position:absolute; top:50px; left:${trial.initPos}px">
+              <img src="img/myCar.png" style="height:${trial.carSize[0]}px; width:${trial.carSize[1]}px"></img>
+            </div>
+            <div id="opponent" style="position:absolute; top:${250-trial.carSize[0]-50}px; left:${trial.initPos}px">
+              <img src="img/theirCar.png" style="height:${trial.carSize[0]}px; width:${trial.carSize[1]}px"></img>
+            </div>
+            <div style="position:absolute; left:${trial.trackWidth-trial.initPos}px; height: 100%; width:5px; background:black">
+            </div>
           </div>
 
-          <div id="opponent" style="position:absolute; top:50%; left:${trial.initPos}%">
-            <img src="img/theirCar.png" style="height:${trial.height}vh; width:${trial.width}vw"></img>
-          </div>
-
-          <div style="position:absolute; top:35%; left:${100-trial.initPos}%; height:25vh; width:5px; background:black">
-          </div>
-
-          <div style="position:absolute; top:72%; left:40%; margin-top:-3vh; margin-left:-3vh; font-size:3vh; z-index:9">
-            <p id="left-button" style="height:6vh; width:6vh; background:#ffa590; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">E</p>
-          </div>
-          <div style="position:absolute; top:72%; left:60%; margin-top:-3vh; margin-left:-3vh; font-size:3vh; z-index:9">
-            <p id="right-button" style="height:6vh; width:6vh; background:#a3a6a7; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">I</p>
+          <div style="position:relative; left: 0; right: 0; width: 600px; height: 100px; margin-top: 25px">
+            <div style="position:absolute; left:${(trial.trackWidth/2) - 100}px; margin-left:-25px; font-size:25px">
+              <p id="left-button" style="height:50px; width:50px; background:#ffa590; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">${trial.keys[0].toUpperCase()}</p>
+            </div>
+            <div style="position:absolute; left:${(trial.trackWidth/2) + 100}px; margin-left:-25px; font-size:25px">
+              <p id="right-button" style="height:50px; width:50px; background:#a3a6a7; display:table-cell; vertical-align:middle; margin-left:auto; margin-right:auto">${trial.keys[1].toUpperCase()}</p>
+            </div>
           </div>`
-
-          // add prompt
-          if (trial.prompt !== null) {
-              new_html += trial.prompt;
-          };
 
           // draw
           display_element.innerHTML = new_html;
 
+          // get perturbation points
+          const distance = trial.trackWidth - trial.carSize[1] - (2*trial.initPos) - 100;
+          const pInterval = distance / 7;
           let pressRight = 0;
           let nPresses = 0;
-          let nPresses_last = nPresses;
-          let nPresses_tot = 0;
           let myPos = trial.initPos;
+          let myLastPos = trial.initPos;
           let theirPos = trial.initPos;
-          let myCar = document.getElementById(trial.image);
+          let pPos = myPos + pInterval;
+          let gauge = document.getElementById("gauge");
+          let myCar = document.getElementById("myCar");
           let theirCar = document.getElementById("opponent");
           let leftButton = document.getElementById("left-button");
           let rightButton = document.getElementById("right-button");
-          let tic = 0;
-          let time = 0;
-          let rate = 0;
+          let loadTime = performance.now();
+          let startTime = 0;
           let win;
+          let tArray = [];
+          let ipr = 0;
+          let nPerturb = 0;
+          let theirSpeed = 0;
 
           // function for moving own car
           const moveMe_func = function(event) {
-            (nPresses_tot == 0) ? tic = Date.now() : time = Date.now() - tic;
+
+            // get time of the start of the race
+            if (nPresses == 0) { startTime = performance.now() };
+
+            tArray.push(performance.now());
+
+            if (tArray.length > 10) { tArray.shift() };
+
+            if (tArray.length > 1) {
+              ipr = (tArray.length - 1) * 1000 / (tArray[tArray.length - 1] - tArray[0]);
+            };
+
+            let iprAdjusted = ipr * trial.boost;
+
+            // move car on screen
             let key = event.key;
             if (key == trial.keys[0] && pressRight == 0) {
-                myPos = myPos + trial.speed;
-                myCar.style.left = myPos + "%";
+                myPos = myPos + trial.speed * trial.boost * Math.min(1, trial.maxSpeed/iprAdjusted);
+                myCar.style.left = myPos + "px";
                 leftButton.style.background = "#a3a6a7";
                 rightButton.style.background = "#ffa590";
                 pressRight = 1;
                 nPresses++;
-                nPresses_tot++;
             } else if (key == trial.keys[1] && pressRight == 1) {
-                myPos = myPos + trial.speed;
-                myCar.style.left = myPos + "%";
+                myPos = myPos + trial.speed * trial.boost * Math.min(1, trial.maxSpeed/iprAdjusted);
+                myCar.style.left = myPos + "px";
                 leftButton.style.background = "#ffa590";
                 rightButton.style.background = "#a3a6a7";
                 pressRight = 0;
                 nPresses++;
-                nPresses_tot++;
-            }
-            myCar = document.getElementById(trial.image);
-            if (theirPos + trial.width > 100 - trial.initPos || myPos + trial.width > 100 - trial.initPos) {
+            };
+
+            myCar = document.getElementById("myCar");
+
+            // end trial if car explodes or race is finished
+            if (theirPos + trial.carSize[1] > trial.trackWidth - trial.initPos || myPos + trial.carSize[1] > trial.trackWidth - trial.initPos) {
               myPos >= theirPos ? win = 1 : win = 0;
               end_trial();
             }
-            rate = (nPresses_tot / time) * 1000;
           };
 
           // wrapper for balloon function
@@ -157,30 +195,30 @@ var jsPsychRaceGame = (function (jspsych) {
 
           // function for moving opponent's car
           const moveThem_func = function() {
-            let pAccel = logit(rate, .5, 12.5, trial.intercept);
+            let x0 = (trial.maxSpeed/(trial.maxBoost * trial.scale)) - 0.1428571;
+            if (parseInt(myCar.style.left) != myLastPos) { theirSpeed = parseInt(myCar.style.left) - myLastPos };
+            let pAccel = logit(Math.min(trial.maxSpeed/trial.boost, ipr), trial.scale, .7, trial.shift, x0);
             let accel = (Math.random() > pAccel) ? 1 : 0;
             let perturb = 0;
-            if (Math.random() > .8) {
-              perturb = (accel - .5) * .6;
-              console.log(rate, pAccel)
+            if (myPos >= pPos && nPerturb < 7) {
+              perturb = (accel - .5) * trial.speed * 4;
+              if (nPerturb == 4) { perturb = perturb + (theirSpeed/2) };
+              pPos = myPos + pInterval;
+              nPerturb++;
+              console.log(pAccel, perturb);
             };
-            if (nPresses == 0) {
-              theirPos = theirPos + (trial.speed * nPresses_last + perturb);
-            } else {
-              theirPos = theirPos + (trial.speed * nPresses + perturb);
-              nPresses_last = nPresses;
-            };
-            theirCar.style.left = theirPos + "%";
-            nPresses = 0;
-          }
-
-          const move_opp = setInterval(moveThem_func, 500);
-
-          // store response
-          var response = {
-              rt: null,
-              key: null,
+            theirPos = theirPos + perturb + theirSpeed;
+            theirCar.style.left = theirPos + "px";
+            myLastPos = parseInt(myCar.style.left);
+            if (theirPos + trial.carSize[1] > trial.trackWidth - trial.initPos || myPos + trial.carSize[1] > trial.trackWidth - trial.initPos) {
+              myPos >= theirPos ? win = 1 : win = 0;
+              end_trial();
+            }
           };
+
+          const move_opp = setInterval(moveThem_func, 300);
+
+
           // function to end trial when it is time
           const end_trial = () => {
               // kill any remaining setTimeout handlers
@@ -193,10 +231,9 @@ var jsPsychRaceGame = (function (jspsych) {
               }
               // gather the data to store for the trial
               var trial_data = {
-                  rt: response.rt,
-                  playTime: time,
-                  nPresses: nPresses_tot,
-                  rate: rate,
+                  rt: performance.now() - loadTime,
+                  playTime: performance.now() - startTime,
+                  nPresses: nPresses,
                   myPos: myPos,
                   theirPos: theirPos,
                   outcome: win,
@@ -220,26 +257,6 @@ var jsPsychRaceGame = (function (jspsych) {
                   end_trial();
               }
           };
-          // start the response listener
-          if (trial.choices != "NO_KEYS") {
-              var keyboardListener = this.jsPsych.pluginAPI.getKeyboardResponse({
-                  callback_function: after_response,
-                  valid_responses: trial.choices,
-                  rt_method: "performance",
-                  persist: false,
-                  allow_held_key: false,
-              });
-          }
-          // hide stimulus if stimulus_duration is set
-          if (trial.stimulus_duration !== null) {
-              this.jsPsych.pluginAPI.setTimeout(() => {
-                  display_element.querySelector("#jspsych-html-keyboard-response-stimulus").style.visibility = "hidden";
-              }, trial.stimulus_duration);
-          }
-          // end trial if trial_duration is set
-          if (trial.trial_duration !== null) {
-              this.jsPsych.pluginAPI.setTimeout(end_trial, trial.trial_duration);
-          }
       }
       simulate(trial, simulation_mode, simulation_options, load_callback) {
           if (simulation_mode == "data-only") {

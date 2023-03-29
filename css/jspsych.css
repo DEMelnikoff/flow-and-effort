@@ -557,3 +557,26 @@
 #jspsych-canvas-stimulus {
   display: block;
 }
+
+/******************************************************************************************************************
+  
+CUSTOM CSS
+
+*******************************************************************************************************************/
+
+
+.green-game {
+  color: green;
+  font-weight: bold;
+}
+
+.blue-game {
+  color: blue;
+  font-weight: bold;
+}
+
+.parent {
+  position: relative;
+  width: 950px;
+  height: 500px;
+}
