@@ -22,7 +22,7 @@ var jsPsychRaceGame = (function (jspsych) {
           },
           /**
            * Maximum speed of car.
-           */
+           */ 
           maxSpeed: {
               type: jspsych.ParameterType.INT,
               pretty_name: "Max Speed",
